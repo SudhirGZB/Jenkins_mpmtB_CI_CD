@@ -2,12 +2,14 @@ pipeline {
     agent any
 
     tools {
-        maven "Maven3"      // Jenkins में configured Maven
+        maven "Maven3"     // Jenkins में configured Maven
+        jdk "Java17"       // Jenkins में configured Java
     }
 
     environment {
         APP_NAME = "transactional.jar"
         DEPLOY_PATH = "/home/ubuntu/sudhir/proje"
+        USER_NAME = "sudhir"
     }
 
     stages {
@@ -20,23 +22,31 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                dir('transactional/transactional') { // Maven project folder
+                    sh 'mvn clean package -DskipTests'
+                }
             }
         }
 
         stage('Deploy & Restart') {
             steps {
                 sh """
-                # Copy JAR to deploy folder
-                cp target/${APP_NAME} ${DEPLOY_PATH}/${APP_NAME}
-                
-                # Sudhir user के लिए execute permission
+                # Deploy jar to proje folder
+                cp transactional/transactional/target/${APP_NAME} ${DEPLOY_PATH}/${APP_NAME}
+
+                # Sudhir user ke liye permissions
+                chown ${USER_NAME}:${USER_NAME} ${DEPLOY_PATH}/${APP_NAME}
                 chmod 755 ${DEPLOY_PATH}/${APP_NAME}
 
-                # पुराने process को बंद करें
+                # Stop previous process if running
                 pkill -f ${APP_NAME} || true
 
-                # Run JAR in background and log output
+                # Ensure app.log exists and has correct permissions
+                touch ${DEPLOY_PATH}/app.log
+                chown ${USER_NAME}:${USER_NAME} ${DEPLOY_PATH}/app.log
+                chmod 644 ${DEPLOY_PATH}/app.log
+
+                # Start the jar in background
                 nohup java -jar ${DEPLOY_PATH}/${APP_NAME} > ${DEPLOY_PATH}/app.log 2>&1 &
                 """
             }
