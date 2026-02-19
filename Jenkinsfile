@@ -3,7 +3,6 @@ pipeline {
 
     tools {
         maven "Maven3"     // Jenkins में configured Maven
-        jdk "Java17"       // Jenkins में configured Java
     }
 
     environment {
