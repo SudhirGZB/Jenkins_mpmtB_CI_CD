@@ -1,53 +1,45 @@
 pipeline {
     agent any
 
-    tools {
-        maven "Maven3"
-    }
-
     environment {
-        APP_DIR = "/home/ubuntu/sudhir/proje"
-        JAR_NAME = "transactional.jar"
+        APP_NAME = "transactional.jar"
+        DEPLOY_PATH = "/home/ubuntu/sudhir/proje"
     }
 
     stages {
 
-        stage('Clone Code') {
+        stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/SudhirGZB/Jenkins_mpmtB_CI_CD.git'
+                git branch: 'main', url: 'https://github.com/YOUR_REPO.git'
             }
         }
 
-        stage('Build JAR') {
+        stage('Build') {
             steps {
-                dir('transactional/transactional') {
-                    sh 'mvn clean package -DskipTests'
-                }
+                sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Deploy JAR') {
+        stage('Deploy & Restart') {
             steps {
-                sh 'cp transactional/transactional/target/*.jar $APP_DIR/$JAR_NAME'
-            }
-        }
-
-        stage('Restart Application') {
-            steps {
-                sh '''
-                pkill -f $JAR_NAME || true
-                nohup java -jar $APP_DIR/$JAR_NAME > $APP_DIR/app.log 2>&1 &
-                '''
+                sh """
+                cp target/${APP_NAME} ${DEPLOY_PATH}/${APP_NAME}
+                chmod 755 ${DEPLOY_PATH}/${APP_NAME}
+                
+                pkill -f ${APP_NAME} || true
+                
+                nohup java -jar ${DEPLOY_PATH}/${APP_NAME} > ${DEPLOY_PATH}/app.log 2>&1 &
+                """
             }
         }
     }
 
     post {
         success {
-            echo "Deployment Successful ✅"
+            echo 'Application Deployed Successfully 🚀'
         }
         failure {
-            echo "Build Failed ❌"
+            echo 'Deployment Failed ❌'
         }
     }
 }
