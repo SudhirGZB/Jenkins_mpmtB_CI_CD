@@ -5,42 +5,39 @@ pipeline {
         maven "Maven3"
     }
 
-    
     environment {
-        TOMCAT_HOME = "/home/ubuntu/sudhir/tomcat/apache-tomcat-11.0.15"
+        APP_DIR = "/home/ubuntu/sudhir/proje"
+        JAR_NAME = "transactional.jar"
     }
 
     stages {
 
         stage('Clone Code') {
             steps {
-                echo "Cloning Repository..."
                 git branch: 'main', url: 'https://github.com/SudhirGZB/Jenkins_mpmtB_CI_CD.git'
             }
         }
 
         stage('Build JAR') {
             steps {
-                echo "Building JAR..."
                 dir('transactional/transactional') {
-                    sh 'mvn clean package'
+                    sh 'mvn clean package -DskipTests'
                 }
             }
         }
 
-        stage('Deploy to Tomcat') {
+        stage('Deploy JAR') {
             steps {
-                echo "Deploying to Tomcat..."
-                sh 'cp transactional/transactional/target/*.jar $TOMCAT_HOME/webapps/'
+                sh 'cp transactional/transactional/target/*.jar $APP_DIR/$JAR_NAME'
             }
         }
 
-        stage('Restart Tomcat') {
+        stage('Restart Application') {
             steps {
-                echo "Restarting Tomcat..."
-                sh '$TOMCAT_HOME/bin/shutdown.sh || true'
-                sleep 5
-                sh '$TOMCAT_HOME/bin/startup.sh'
+                sh '''
+                pkill -f $JAR_NAME || true
+                nohup java -jar $APP_DIR/$JAR_NAME > $APP_DIR/app.log 2>&1 &
+                '''
             }
         }
     }
