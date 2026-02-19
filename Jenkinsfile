@@ -6,7 +6,6 @@ pipeline {
     }
 
     environment {
-        APP_NAME = "transactional.jar"
         DEPLOY_PATH = "/home/ubuntu/sudhir/proje"
         USER_NAME = "sudhir"
     }
@@ -30,15 +29,19 @@ pipeline {
         stage('Deploy & Restart') {
             steps {
                 sh """
-                # Deploy jar to proje folder
-                cp transactional/transactional/target/${APP_NAME} ${DEPLOY_PATH}/${APP_NAME}
+                mkdir -p ${DEPLOY_PATH}
+
+                # Target folder में बने सभी jar को destination में copy करें
+                for jar in transactional/transactional/target/*.jar; do
+                    cp \$jar ${DEPLOY_PATH}/transactional.jar
+                done
 
                 # Sudhir user ke liye permissions
-                chown ${USER_NAME}:${USER_NAME} ${DEPLOY_PATH}/${APP_NAME}
-                chmod 755 ${DEPLOY_PATH}/${APP_NAME}
+                chown ${USER_NAME}:${USER_NAME} ${DEPLOY_PATH}/transactional.jar
+                chmod 755 ${DEPLOY_PATH}/transactional.jar
 
                 # Stop previous process if running
-                pkill -f ${APP_NAME} || true
+                pkill -f transactional.jar || true
 
                 # Ensure app.log exists and has correct permissions
                 touch ${DEPLOY_PATH}/app.log
@@ -46,7 +49,7 @@ pipeline {
                 chmod 644 ${DEPLOY_PATH}/app.log
 
                 # Start the jar in background
-                nohup java -jar ${DEPLOY_PATH}/${APP_NAME} > ${DEPLOY_PATH}/app.log 2>&1 &
+                nohup java -jar ${DEPLOY_PATH}/transactional.jar > ${DEPLOY_PATH}/app.log 2>&1 &
                 """
             }
         }
