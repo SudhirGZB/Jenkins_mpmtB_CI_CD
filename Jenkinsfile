@@ -7,7 +7,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/SudhirGZB/Jenkins_mpmtB_CI_CD.git'
@@ -23,12 +22,12 @@ pipeline {
         stage('Deploy & Restart') {
             steps {
                 sh """
-                cp target/${APP_NAME} ${DEPLOY_PATH}/${APP_NAME}
-                chmod 755 ${DEPLOY_PATH}/${APP_NAME}
-                
-                pkill -f ${APP_NAME} || true
-                
-                nohup java -jar ${DEPLOY_PATH}/${APP_NAME} > ${DEPLOY_PATH}/app.log 2>&1 &
+                sudo -u sudhir cp target/${APP_NAME} ${DEPLOY_PATH}/${APP_NAME}
+                sudo -u sudhir chmod 755 ${DEPLOY_PATH}/${APP_NAME}
+
+                sudo -u sudhir pkill -f ${APP_NAME} || true
+
+                sudo -u sudhir nohup java -jar ${DEPLOY_PATH}/${APP_NAME} > ${DEPLOY_PATH}/app.log 2>&1 &
                 """
             }
         }
