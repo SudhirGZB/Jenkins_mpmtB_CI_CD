@@ -5,6 +5,7 @@ pipeline {
         maven "Maven3"
     }
 
+    
     environment {
         TOMCAT_HOME = "/home/ubuntu/sudhir/tomcat/apache-tomcat-11.0.15"
     }
