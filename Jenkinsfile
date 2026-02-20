@@ -43,7 +43,7 @@ pipeline {
                 done
 
                 # Set ownership
-                chown ${USER_NAME}:${USER_NAME} ${WEBAPPS_PATH}/transactional.war
+                chown ${USER_NAME}:${USER_NAME} ${WEBAPPS_PATH}/transactional.jar
                 chmod 755 ${WEBAPPS_PATH}/transactional.war
 
                 # Start Tomcat
