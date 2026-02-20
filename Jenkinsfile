@@ -25,21 +25,15 @@ pipeline {
             }
         }
 
-        stage('Deploy Jar Locally') {
+        stage('Deploy Jar') {
             steps {
                 sh """
-                # Ensure deploy folder exists
                 mkdir -p ${DEPLOY_PATH}
 
-                # Copy jar to proje folder
-                cp transactional/transactional/target/*.jar \
-                ${DEPLOY_PATH}/transactional.jar
+                # Copy jar as it is (no rename)
+                cp transactional/transactional/target/*.jar ${DEPLOY_PATH}/
 
-                # Set proper ownership
-                chown sudhir:sudhir ${DEPLOY_PATH}/transactional.jar
-                chmod 755 ${DEPLOY_PATH}/transactional.jar
-
-                # Restart systemd service
+                # Restart service
                 sudo systemctl restart transactional
                 """
             }
