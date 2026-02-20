@@ -1,56 +1,57 @@
 pipeline {
     agent any
-
+    
     tools {
         maven "Maven3"
     }
 
-    
     environment {
-        TOMCAT_HOME = "/home/ubuntu/sudhir/tomcat/apache-tomcat-11.0.15"
+        DEPLOY_PATH = "/home/ubuntu/sudhir/proje"
     }
 
     stages {
 
-        stage('Clone Code') {
+        stage('Checkout Code') {
             steps {
-                echo "Cloning Repository..."
                 git branch: 'main', url: 'https://github.com/SudhirGZB/Jenkins_mpmtB_CI_CD.git'
             }
         }
 
-        stage('Build JAR') {
+        stage('Build') {
             steps {
-                echo "Building JAR..."
                 dir('transactional/transactional') {
-                    sh 'mvn clean package'
+                    sh 'mvn clean package -DskipTests'
                 }
             }
         }
 
-        stage('Deploy to Tomcat') {
+        stage('Deploy Jar Locally') {
             steps {
-                echo "Deploying to Tomcat..."
-                sh 'cp transactional/transactional/target/*.jar $TOMCAT_HOME/webapps/'
-            }
-        }
+                sh """
+                # Ensure deploy folder exists
+                mkdir -p ${DEPLOY_PATH}
 
-        stage('Restart Tomcat') {
-            steps {
-                echo "Restarting Tomcat..."
-                sh '$TOMCAT_HOME/bin/shutdown.sh || true'
-                sleep 5
-                sh '$TOMCAT_HOME/bin/startup.sh'
+                # Copy jar to proje folder
+                cp transactional/transactional/target/*.jar \
+                ${DEPLOY_PATH}/transactional.jar
+
+                # Set proper ownership
+                chown sudhir:sudhir ${DEPLOY_PATH}/transactional.jar
+                chmod 755 ${DEPLOY_PATH}/transactional.jar
+
+                # Restart systemd service
+                sudo systemctl restart transactional
+                """
             }
         }
     }
 
     post {
         success {
-            echo "Deployment Successful ✅"
+            echo 'Application Deployed Successfully 🚀'
         }
         failure {
-            echo "Build Failed ❌"
+            echo 'Deployment Failed ❌'
         }
     }
 }
