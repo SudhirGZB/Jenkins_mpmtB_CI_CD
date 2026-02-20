@@ -6,9 +6,8 @@ pipeline {
     }
 
     environment {
-        TOMCAT_PATH = "/home/ubuntu/sudhir/tomcat/apache-tomcat-11.0.15"
-        WEBAPPS_PATH = "/home/ubuntu/sudhir/tomcat/apache-tomcat-11.0.15/webapps"
-        USER_NAME = "sudhir"
+        SERVER_IP = "ip-44-193-0-59"
+        DEPLOY_PATH = "/home/ubuntu/sudhir/proje"
     }
 
     stages {
@@ -27,28 +26,20 @@ pipeline {
             }
         }
 
-        stage('Deploy to Tomcat & Restart') {
+        stage('Deploy Jar to Server') {
             steps {
-                sh """
-                # Stop Tomcat
-                ${TOMCAT_PATH}/bin/shutdown.sh || true
-                sleep 5
+                sshagent(['sudhir-ssh-key']) {
+                    sh """
+                    # Copy jar to proje folder
+                    scp -o StrictHostKeyChecking=no \
+                    transactional/transactional/target/*.jar \
+                    sudhir@${SERVER_IP}:${DEPLOY_PATH}/transactional.jar
 
-                # Remove old deployment
-                rm -rf ${WEBAPPS_PATH}/transactional*
-                
-                # Copy new jar (rename as war if needed)
-                for jar in transactional/transactional/target/*.jar; do
-                    cp \$jar ${WEBAPPS_PATH}/transactional.war
-                done
-
-                # Set ownership
-                chown ${USER_NAME}:${USER_NAME} ${WEBAPPS_PATH}/transactional.jar
-                chmod 755 ${WEBAPPS_PATH}/transactional.war
-
-                # Start Tomcat
-                ${TOMCAT_PATH}/bin/startup.sh
-                """
+                    # Restart systemd service
+                    ssh -o StrictHostKeyChecking=no sudhir@${SERVER_IP} \
+                    "sudo systemctl restart transactional"
+                    """
+                }
             }
         }
     }
