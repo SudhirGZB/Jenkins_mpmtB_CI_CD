@@ -6,7 +6,6 @@ pipeline {
     }
 
     environment {
-        SERVER_IP = "ip-44-193-0-59"
         DEPLOY_PATH = "/home/ubuntu/sudhir/proje"
     }
 
@@ -26,20 +25,23 @@ pipeline {
             }
         }
 
-        stage('Deploy Jar to Server') {
+        stage('Deploy Jar Locally') {
             steps {
-                sshagent(['sudhir-ssh-key']) {
-                    sh """
-                    # Copy jar to proje folder
-                    scp -o StrictHostKeyChecking=no \
-                    transactional/transactional/target/*.jar \
-                    sudhir@${SERVER_IP}:${DEPLOY_PATH}/transactional.jar
+                sh """
+                # Ensure deploy folder exists
+                mkdir -p ${DEPLOY_PATH}
 
-                    # Restart systemd service
-                    ssh -o StrictHostKeyChecking=no sudhir@${SERVER_IP} \
-                    "sudo systemctl restart transactional"
-                    """
-                }
+                # Copy jar to proje folder
+                cp transactional/transactional/target/*.jar \
+                ${DEPLOY_PATH}/transactional.jar
+
+                # Set proper ownership
+                chown sudhir:sudhir ${DEPLOY_PATH}/transactional.jar
+                chmod 755 ${DEPLOY_PATH}/transactional.jar
+
+                # Restart systemd service
+                sudo systemctl restart transactional
+                """
             }
         }
     }
