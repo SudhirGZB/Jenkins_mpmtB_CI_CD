@@ -10,7 +10,7 @@ public class RansacCtrl {
 	
 @GetMapping("/showmsg")	
 String showMessage() {
-	return "it's transactional msg using CI CD completed11";
+	return "it's transactional msg using CI CD completed111";
 	
 }
 
